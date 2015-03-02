@@ -249,7 +249,7 @@ def list_episodes():
                     try: name = episodes[episode]['name'].encode('utf-8')
                     except: name = ''
                     #name = 'Folge %s: %s' % (str(episode), name)
-                    name = '%s .S01E0%s. %s' % (anime,str(episode), name)
+                    name = '%s .E0%s. %s' % (anime,str(episode), name)
                     addEpisode(site,name,id,'get_mirrors',anime,episode)
             else:
                 for epi in episodes:
