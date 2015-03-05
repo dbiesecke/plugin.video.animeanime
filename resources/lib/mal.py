@@ -5,6 +5,22 @@ datapath = xbmc.translatePath('special://profile/addon_data/plugin.video.animean
 if not os.path.isdir(datapath):
     os.mkdir(datapath)
 mal = os.path.join(datapath,'mal.json')
+best = os.path.join(datapath,'fav.json')
+
+#def get_fast_search(string)
+    #with open(os.path.join(datapath,'bs.db'), 'r') as searchfile:
+	#for line in searchfile:
+	    #if string in line:
+		#print line
+
+	  
+
+def get_fav_serien_entries():
+    if os.path.exists(best):
+        with open(best) as f:
+            json_data = json.load(f)
+        if json_data:
+            return json_data
 
 def get_my_anime_entries():
     if os.path.exists(mal):

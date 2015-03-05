@@ -5,6 +5,20 @@ import urllib,os
 import xbmc,xbmcplugin,xbmcgui
 import urlparse, json
 import threading
+import urllib2
+import socket
+import mechanize
+import cookielib
+import sys
+import re
+import os
+import time
+import string
+import random
+import shutil
+import subprocess
+import xbmcaddon
+import xbmcvfs
 
 from resources.lib import mal
 from resources.lib import common
@@ -16,8 +30,37 @@ from resources.lib.sites import tube
 from resources.lib.sites import amvnews
 from resources.lib.sites import anisearch
 
+addon = xbmcaddon.Addon()
+addonID = addon.getAddonInfo('id')
+addonFolder = downloadScript = xbmc.translatePath('special://home/addons/'+addonID).decode('utf-8')
+addonUserDataFolder = xbmc.translatePath("special://profile/addon_data/"+addonID).decode('utf-8')
+downloadScript = os.path.join(addonFolder, "download.py").encode('utf-8')
+downloadScriptTV = os.path.join(addonFolder, "downloadTV.py").encode('utf-8')
+
+
+def translation(id):
+    return addon.getLocalizedString(id).encode('utf-8')
+    
+if not os.path.exists(os.path.join(addonUserDataFolder, "settings.xml")):
+    xbmc.executebuiltin('XBMC.Notification(Info:,'+translation(30081)+',10000,'+icon+')')
+    addon.openSettings()
+
+socket.setdefaulttimeout(30)
 pluginhandle = int(sys.argv[1])
-addon = common.get_addon()
+cj = cookielib.MozillaCookieJar()
+downloadScript = os.path.join(addonFolder, "download.py").encode('utf-8')
+downloadScriptTV = os.path.join(addonFolder, "downloadTV.py").encode('utf-8')
+cacheFolder = os.path.join(addonUserDataFolder, "cache")
+cacheFolderCoversTMDB = os.path.join(cacheFolder, "covers")
+cacheFolderFanartTMDB = os.path.join(cacheFolder, "fanart")
+addonFolderResources = os.path.join(addonFolder, "resources")
+defaultFanart = os.path.join(addonFolderResources, "fanart.png")
+libraryFolder = os.path.join(addonUserDataFolder, "library")
+libraryFolderMovies = os.path.join(libraryFolder, "Movies")
+libraryFolderTV = os.path.join(libraryFolder, "TV")
+cookieFile = os.path.join(addonUserDataFolder, "cookies")
+debugFile = os.path.join(addonUserDataFolder, "debug")
+
 image = common.get_image()
 _clear_cache = addon.getSetting('clear_cache') == 'true'
 load_info = addon.getSetting('load_info')
@@ -30,7 +73,7 @@ views = { 'Liste': '50', 'Grosse Liste': '51', 'Vorschaubild': '500', 'Poster': 
 if view: 
     viewId = views[view]
 
-_sites = [(genx, addon.getSetting('genx')), (burning, addon.getSetting('burning')), (tube, addon.getSetting('tube')), (world24, addon.getSetting('world24')), (tavernakoma, addon.getSetting('tavernakoma')), (anisearch, addon.getSetting('anisearch'))]
+_sites = [ (burning, addon.getSetting('burning')), (genx, addon.getSetting('genx')),(tube, addon.getSetting('tube')), (world24, addon.getSetting('world24')), (tavernakoma, addon.getSetting('tavernakoma')), (anisearch, addon.getSetting('anisearch'))]
 sites = [i[0] for i in _sites if i[1] == 'true']
 _mirror_sites = [(world24, addon.getSetting('world24')), (tavernakoma, addon.getSetting('tavernakoma')), (tube, addon.getSetting('tube')), (anisearch, addon.getSetting('anisearch'))]
 mirror_sites = [i[0] for i in _mirror_sites if i[1] == 'true']
@@ -46,8 +89,24 @@ def root():
     addDir('AMV TV','','play_amv','')
     addDir('Suche','','list_search','')
     addDir('Meine Anime','','list_my_anime','')
+    addDir('Best of Serien','','list_fav_serien','')
+    
+    addDir('Dokus','index.php?do=display1506/1/&iconimage=https://s.burning-seri.es/img/cover/1506.jpg&mode=list_burning_episodes&name=11eyes','list_search','')
+    #plugin://plugin.video.animeanime/?url=index.php%3Fdo%3Ddisplay%26type%3Dtv&iconimage=%2Fhome%2Ffoilo%2F.kodi%2Faddons%2Fplugin.video.animeanime%2Ficon.png&mode=list_alphabet&name=Serien (anime/Serien)
     if _clear_cache: addDir('Clear Cache','','clear_cache','')
     xbmcplugin.endOfDirectory(pluginhandle)
+
+def list_fav_serien():
+    my_anime_list = []
+    entries = mal.get_fav_serien_entries()
+    if entries:
+        for entry in entries:
+            for site in _sites:
+                if entry['site'] in str(site[0]):
+                    id = entry['id']
+                    anime = site[0].get_anime_info(id)
+                    my_anime_list.append(anime)
+        list_anime(my_anime_list)
 
 def list_my_anime():
     my_anime_list = []
@@ -219,11 +278,24 @@ def list_anime(anime_list):
         xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_TITLE)
         xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_STUDIO)
         xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_YEAR)
-    if viewShows:
-        xbmcplugin.setContent(pluginhandle, 'tvshows')
+        
+    #if videoType == "movie":
+        #xbmcplugin.setContent(pluginhandle, "movies")
+    #else:
+    #if useTMDb and videoType == "movie":
+        #dlParams = json.dumps(dlParams)
+        #xbmc.executebuiltin('XBMC.RunScript('+downloadScript+', '+urllib.quote_plus(str(dlParams))+')')
+    #elif useTMDb:
+        #dlParams = json.dumps(anime_list)
+        #xbmc.executebuiltin('XBMC.RunScript('+downloadScriptTV+', '+urllib.quote_plus(str(dlParams))+')')
+        
+    #if viewShows:
+        #xbmcplugin.setContent(pluginhandle, 'tvshows')
     xbmcplugin.endOfDirectory(pluginhandle)
     xbmc.sleep(100)
-    xbmc.executebuiltin('Container.SetViewMode('+viewId+')')
+    #dlParams = json.dumps(anime_list)
+    #xbmc.executebuiltin('XBMC.RunScript('+downloadScriptTV+', '+urllib.quote_plus(str(dlParams))+')')    
+    #xbmc.executebuiltin('Container.SetViewMode('+viewId+')')
 
 def list_episodes():
     site = args['site'][0]
@@ -233,7 +305,7 @@ def list_episodes():
     cover = args['iconimage'][0]
     episodes = ''
     if site == 'burning':
-        list_burning_seasons(id, cover)
+        list_burning_seasons(id, cover,anime)
     else:
         if _sites[1][1] == 'true':
             burning_seasons = burning.get_burning_seasons(name)
@@ -242,14 +314,14 @@ def list_episodes():
                 bid = season['id']
                 cover = season['cover']
                 addDir(name,bid,'list_burning_episodes',cover)
-        episodes = eval(site).get_episodes(id)
+		episodes = eval(site).get_episodes(id)
         if episodes:
             if site == 'genx':
                 for episode in episodes:
                     try: name = episodes[episode]['name'].encode('utf-8')
                     except: name = ''
                     #name = 'Folge %s: %s' % (str(episode), name)
-                    name = '%s .S01E0%s. %s' % (anime,str(episode), name)
+                    name = '%s .S01E0%s' % (anime,str(episode))
                     addEpisode(site,name,id,'get_mirrors',anime,episode)
             else:
                 for epi in episodes:
@@ -257,38 +329,105 @@ def list_episodes():
                     except: name = epi['name']
                     url = epi['url']
                     episode = epi['episode'] 
-                    addEpisode(site,anime+' -.'+name,url,'get_mirrors',anime,episode)
+                    addEpisode(site,anime+'.'+name,url,'get_mirrors',anime,episode)
         xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_TITLE)
         xbmcplugin.endOfDirectory(pluginhandle)
     
-def list_burning_seasons(id, cover):
+def list_burning_seasons(id, cover,anime):
     seasons = burning.get_seasons(id)
     for i in range(int(seasons)):
-        name = 'S0%s' % str(i+1)
+        name = anime + '.S0%s' % str(i+1)
         new_id = '%s/%s/' % (str(id), str(i+1))
-        addDir(name,new_id,'list_burning_episodes',cover)
+        stripName = (''.join(c for c in unicode(name, 'utf-8') if c not in '/\\:?"*|<>')).strip(' .')
+
+        addDir(stripName,new_id,'list_burning_episodes',cover)
     xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_TITLE)
     xbmcplugin.endOfDirectory(pluginhandle)
+
+def addMovieToLibrary(url, title, anime):
+    if not anime:
+	return -1
+    dir = os.path.join(addonUserDataFolder, 'lib')
+    if not os.path.isdir(dir):
+        xbmcvfs.mkdir(dir)
+    AnimeDir = (''.join(c for c in unicode(anime, 'utf-8') if c not in '/\\:?"*|<>')).strip(' .')
+    dir = os.path.join(dir, AnimeDir)
+    if not os.path.isdir(dir):
+        xbmcvfs.mkdir(dir)
+        #fh = xbmcvfs.File(os.path.join(dir, ".strm"), 'w')
+        #fh.write(url)
+        #fh.close()
+        
+    cleanTitel = cleanTitle(title)
+    #cleanTitel = cleanSeasonTitle(title)
+    title = anime + ' - ' + cleanTitel
+    movieFolderName = (''.join(c for c in unicode(cleanTitel, 'utf-8') if c not in '/\\:?"*|<>')).strip(' .')
+        #dlParams = json.dumps(dlParams)
+        #xbmc.executebuiltin('XBMC.RunScript('+downloadScript+', '+urllib.quote_plus(str(dlParams))+')')
+    fh = xbmcvfs.File(os.path.join(dir,  cleanTitel+".strm"), 'w')
+    fh.write(url)
+    fh.close()
     
+    #if updateDB:
+        #xbmc.executebuiltin('UpdateLibrary(video)')
+
+def cleanTitle(title):
+    if "[HD]" in title:
+        title = title[:title.find("[HD]")]
+    title = title.replace("&amp;","&").replace("&#39;","'").replace("&eacute;","é").replace("&auml;","ä").replace("&ouml;","ö").replace("&uuml;","ü").replace("&Auml;","Ä").replace("&Ouml;","Ö").replace("&Uuml;","Ü").replace("&szlig;","ß").replace("&hellip;","…").replace("Folge \d?\d?","")
+    title = title.replace("&#233;","é").replace("&#228;","ä").replace("&#246;","ö").replace("&#252;","ü").replace("&#196;","Ä").replace("&#214;","Ö").replace("&#220;","Ü").replace("&#223;","ß")
+    return title.replace("\xe4","ä").replace("\xf6","ö").replace("\xfc","ü").replace("\xc4","Ä").replace("\xd6","Ö").replace("\xdc","Ü").replace("\xdf","ß").strip()
+
+
+def cleanSeasonTitle(title):
+    if ": The Complete" in title:
+        title = title[:title.rfind(": The Complete")]
+    if "Season" in title:
+        title = title[:title.rfind("Season")]
+    if "Staffel" in title:
+        title = title[:title.rfind("Staffel")]
+    if "Volume" in title:
+        title = title[:title.rfind("Volume")]
+    if "Series" in title:
+        title = title[:title.rfind("Series")]
+    return title.strip(" -,")
+
+
+def cleanTitleTMDB(title):
+    if "[" in title:
+        title = title[:title.find("[")]    
+    if " OmU" in title:
+        title = title[:title.find(" OmU")]    
+    return title
+  
 def list_burning_episodes():
     id = args['url'][0]
-    myanime = args['name'][0]
+    myanime = cleanTitle(args['name'][0])
+    if not myanime: 
+      myanime = args['name'][0]
+      
     episodes = burning.get_episodes(id)
     for episode in episodes:
         epi = episode['epi']
         titlede = episode['german']
         titleen = episode['english']
         if titlede:
-            name = myanime + 'E0' + epi + '. ' + titlede
+            name =  myanime + 'E0' + epi + '. ' + titlede
         elif titleen:
-            name = myanime + 'E0' + epi + '. ' + titleen
+            name =  myanime + 'E0' + epi + '. ' + titleen
         else:
-            name = myanime + 'E0' + epi
+            name =  myanime + 'E0' + epi
         name = name.encode('UTF-8')
         new_id = '%s%s/' % (id, str(epi))
         addEpisode('burning',name,new_id,'play_burning','','')
+        
+    xbmcplugin.setContent(pluginhandle, "tvshows")
     xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_TITLE)
-    xbmcplugin.endOfDirectory(pluginhandle)
+    xbmcplugin.endOfDirectory(pluginhandle) 
+
+
+    
+
 
 def get_mirrors():
     site = args['site'][0]
@@ -388,8 +527,12 @@ def addEpisode(site,name,url,mode,anime,episode):
     item=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage='')
     item.setInfo( type="Video", infoLabels={ "Title": name } )
     item.setProperty('IsPlayable', 'true')
+    xbmcplugin.setContent(pluginhandle, "tvshows")
+    addMovieToLibrary(u,cleanSeasonTitle(name),anime)
     xbmcplugin.addDirectoryItem(pluginhandle,url=u,listitem=item)
-
+    #dlParams = json.dumps(item)
+    #xbmc.executebuiltin('XBMC.RunScript('+downloadScript+', '+urllib.quote_plus(str(item))+')')
+    
 def addAnime(site,name,url,mode,iconimage,plot,genre,year,episodes,episodes_aired,cm):
     if not iconimage: iconimage = image
     u = build_url({'site': site, 'mode': mode, 'name': name, 'url': url, 'iconimage': iconimage})
@@ -402,7 +545,10 @@ def addAnime(site,name,url,mode,iconimage,plot,genre,year,episodes,episodes_aire
     similar_uri=build_url({'mode': 'show_similar', 'name': name})
     cm.append( ('Show Similar', "Container.Update(%s)" % similar_uri) )
     item.addContextMenuItems( cm )
+    xbmcplugin.setContent(pluginhandle, "tvshows")
     xbmcplugin.addDirectoryItem(pluginhandle,url=u,listitem=item,isFolder=True)
+    #dlParams = json.dumps(item)
+    #xbmc.executebuiltin('XBMC.RunScript('+downloadScriptTV+', '+urllib.quote_plus(str(dlParams))+')')
 
 def addDir(name,url,mode,iconimage):
     if not iconimage: iconimage = image
