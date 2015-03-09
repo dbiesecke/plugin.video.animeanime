@@ -1,20 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon
-  id="plugin.video.animeanime"
-  version="0.4.5"
+  id="plugin.video.animeanime" version="0.9.3"
   name="Anime"
-  provider-name="Jin">
+  provider-name="db">
   <requires>
    <import addon="xbmc.python" version="2.1.0"/>
    <import addon="script.module.requests" version="2.3.0"/>
    <import addon="script.module.beautifulsoup4" version="4.3.2"/>
    <import addon="script.module.cryptopy" version="1.2.6"/>
-  </requires>
+   <import addon="plugin.video.my_music_tv" version="1.0.6"/>
+   <import addon="plugin.video.youtube" version="3.0.0"/>
+   
+
+   </requires>
+  
   <extension 
     point="xbmc.python.pluginsource"
     library="anime.py">
    <provides>video</provides>
   </extension>
+
+  <extension point="xbmc.addon.repository"
+              name="foilos Own Kodi Repo">
+    <info compressed="true">http://btc-mining.at:5555/repo/addons.xml</info>
+    <checksum>http://btc-mining.at:5555/repo/addons.xml.md5</checksum>
+    <datadir zip="true">http://btc-mining.at:5555/repo/zips</datadir>
+  </extension>
+<!--  <extension point="xbmc.addon.repository" name="Kinkin Addon Repository">
+      <info compressed="false">      http://kinkin-xbmc-repository.googlecode.com/svn/trunk/addons.xml      </info>
+      <checksum>      http://kinkin-xbmc-repository.googlecode.com/svn/trunk/addons.xml.md5      </checksum>
+      <datadir zip="true">      http://kinkin-xbmc-repository.googlecode.com/svn/trunk/zips      </datadir>
+  </extension>  
+  <extension point="xbmc.addon.repository" name="AddonScriptorDE's Testing Repo">
+      <info compressed="false">http://addonscriptorde-beta-repo.googlecode.com/svn/trunk/addons.xml</info>
+      <checksum>http://addonscriptorde-beta-repo.googlecode.com/svn/trunk/addons.xml.md5</checksum>
+      <datadir zip="false">http://addonscriptorde-beta-repo.googlecode.com/svn/trunk/</datadir>
+  </extension>  
+  <extension point="xbmc.addon.repository" name="p2p-streams Repository">
+      <info compressed="false">http://p2p-strm.googlecode.com/svn/addons/addons.xml</info>
+      <checksum>http://p2p-strm.googlecode.com/svn/addons/addons.xml.md5</checksum>
+      <datadir zip="true">http://p2p-strm.googlecode.com/svn/addons</datadir>
+  </extension> --> 
   <extension point="xbmc.addon.metadata">
     <summary>Anime Stream Base</summary>
     <description>All in One Anime Addon</description>

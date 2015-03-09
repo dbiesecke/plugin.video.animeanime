@@ -8,7 +8,7 @@ from resources.lib import json_handle
 from resources.lib import common
 
 site = 'burning'
-api_url = 'https://www.burning-seri.es/api/'
+api_url = 'http://www.burning-seri.es/api/'
 genre_url = api_url+'series:genre/'
 series_url = api_url+'series/'
 cover_url = 'https://s.burning-seri.es/img/cover/%s.jpg'
