@@ -19,6 +19,7 @@ from resources.lib.sites import anisearch
 pluginhandle = int(sys.argv[1])
 addon = common.get_addon()
 image = common.get_image()
+favos_online = 'https://gist.githubusercontent.com/dbiesecke/0f2988c7ad66f9faadc9/raw/favos.json'
 _clear_cache = addon.getSetting('clear_cache') == 'true'
 load_info = addon.getSetting('load_info')
 prefer_ihosts = addon.getSetting('prefer_ihosts') == 'true'
@@ -46,19 +47,102 @@ def root():
     addDir('AMV TV','','play_amv','')
     addDir('Suche','','list_search','')
     addDir('Meine Anime','','list_my_anime','')
+    addDir('Sitcom','','list_my_online','')
+    addDir('Comedy','','list_comedy','')
+    addDir('Dokumentation','','list_my_dokus','')
+    addDir('Krimi','','list_krimi','')
+    addDir('Drama','','list_drama','')
+    
+    
     if _clear_cache: addDir('Clear Cache','','clear_cache','')
     xbmcplugin.endOfDirectory(pluginhandle)
 
 def list_my_anime():
     my_anime_list = []
     entries = mal.get_my_anime_entries()
+    x = 0
     if entries:
-        for entry in entries:
+        for entry in reversed(entries):
             for site in _sites:
                 if entry['site'] in str(site[0]):
+		    #x += 1
                     id = entry['id']
                     anime = site[0].get_anime_info(id)
                     my_anime_list.append(anime)
+                    #if x == 10:
+		      #return list_anime(my_anime_list)
+        list_anime(my_anime_list)
+        
+        
+
+def list_my_online():
+    my_anime_list = []
+    entries = burning.get_complete_genre_list('Sitcom')
+    #entries.append(burning.get_complete_genre_list('Comedy'))
+    x = 0
+    if entries:
+        for entry in reversed(entries):
+            for site in _sites:
+                if entry['site'] in str(site[0]):
+		    x += 1
+                    id = entry['id']
+                    my_anime_list.append(entry)
+        list_anime(my_anime_list)
+  
+def list_comedy():
+    my_anime_list = []
+    entries = burning.get_complete_genre_list('Comedy')
+    x = 0
+    if entries:
+        for entry in reversed(entries):
+            for site in _sites:
+                if entry['site'] in str(site[0]):
+		    x += 1
+                    id = entry['id']
+                    my_anime_list.append(entry)
+        list_anime(my_anime_list)
+        
+def list_krimi():
+    my_anime_list = []
+    entries = burning.get_complete_genre_list('Krimi')
+    x = 0
+    if entries:
+        for entry in reversed(entries):
+            for site in _sites:
+                if entry['site'] in str(site[0]):
+		    x += 1
+                    id = entry['id']
+                    my_anime_list.append(entry)
+        list_anime(my_anime_list)
+        
+def list_drama():
+    my_anime_list = []
+    entries = burning.get_complete_genre_list('Drama')
+    x = 0
+    if entries:
+        for entry in reversed(entries):
+            for site in _sites:
+                if entry['site'] in str(site[0]):
+		    x += 1
+                    id = entry['id']
+                    my_anime_list.append(entry)
+        list_anime(my_anime_list)
+        
+        
+def list_my_dokus():
+    my_anime_list = []
+    entries = burning.get_complete_genre_list('Dokumentation')
+    x = 0
+    if entries:
+        for entry in reversed(entries):
+            for site in _sites:
+                if entry['site'] in str(site[0]):
+		    x += 1
+                    id = entry['id']
+                    #anime = site[0].get_anime_info(id)
+                    my_anime_list.append(entry)
+                    #if x == 10:
+		      #return list_anime(my_anime_list)
         list_anime(my_anime_list)
 
 def add_to_mal():

@@ -29,7 +29,21 @@ def get_burning_seasons(name):
             id = '%s/%s/' % (str(b_id), str(i+1))
             burning_seasons.append({'name': name, 'id':id, 'cover': cover})
     return burning_seasons
-    
+
+def get_abc_series_noanime(abc):
+    abc_list = []
+    if abc == 'num': abc = ('.','0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
+    elif abc == 'all': abc = ''
+    else: abc = abc.lower()
+    anime_list = get_complete_anime_list()
+    if abc:
+        for anime in anime_list:
+            if anime['original'].lower().startswith(abc):
+                abc_list.append(anime)
+    else:
+        abc_list = anime_list
+    return abc_list
+  
 def get_abc_series(abc):
     abc_list = []
     if abc == 'num': abc = ('.','0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
@@ -64,6 +78,29 @@ def get_anime_info(id):
     except:
         pass
     return anime
+
+def get_complete_genre_list(mygenre):
+    common.clear_cache()
+    cache_url = common.cleanfilename(genre_url)
+    anime_list = json_handle.load_json(site, cache_url, cache_time=1)
+    if anime_list:
+        return anime_list
+    else:
+        anime_list = []
+        genre = mygenre
+        try:
+            json_data = requests.get(genre_url, timeout=timeout).json()
+            series = json_data[genre]['series']
+            for serie in series:
+                name = serie['name'].encode('UTF-8')
+                id = serie['id']
+                cover = 'https://s.burning-seri.es/img/cover/%s.jpg' % id
+                anime_list.append({'site': site, 'original': name, 'id': id, 'cover': cover, 'beschreibung': '', 'year': '', 'genre': ''})
+            json_handle.save_json(site, cache_url, anime_list)
+        except:
+            pass
+        return anime_list
+      
     
 def get_complete_anime_list():
     cache_url = common.cleanfilename(genre_url)
